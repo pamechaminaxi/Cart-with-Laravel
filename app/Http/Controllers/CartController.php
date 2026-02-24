@@ -39,7 +39,7 @@ class CartController extends Controller
 
         if($cart){
             //update product quantity
-            $cart->quantity = $quantity;
+            $cart->quantity += $quantity;
             $cart->save();
         }
         else{

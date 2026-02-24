@@ -17,9 +17,9 @@ class AddTocartFactory extends Factory
      */
     public function definition(): array
     {
-        return [
-            'product_id' => \App\Models\Product::inRandomOrder()->first()->id,
-            'quantity'   => fake()->numberBetween(1, 100),
-        ];
+        // return [
+        //     'product_id' => \App\Models\Product::inRandomOrder()->first()->id,
+        //     'quantity'   => fake()->numberBetween(1, 100),
+        // ];
     }
 }
