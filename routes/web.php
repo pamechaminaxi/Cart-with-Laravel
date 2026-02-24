@@ -8,5 +8,5 @@ Route::get('/', function () {
 });
 
 Route::get('/cart/add/{product_id}/{quantity}',[CartController::class,'add'])->whereNumber('product_id')->whereNumber('quantity');
-Route::get('/cart/remove/{product_id}/{quantity?}',[CartController::class,'remove'])->whereNumber('product_id')->whereNumber('quantity');
+Route::get('/cart/remove/{product_id}/{quantity?}',[CartController::class,'remove']);
 Route::get('total/amount',[CartController::class,'totalCartAmt']);

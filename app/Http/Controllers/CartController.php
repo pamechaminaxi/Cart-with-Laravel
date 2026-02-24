@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Validator;
 
 class CartController extends Controller
 {
+    //Add New Product with validations
     public function add($product_id, $quantity){
         $validator = validator::make([
             'product_id' => $product_id,
@@ -28,6 +29,7 @@ class CartController extends Controller
                 'quantity.min'        => 'Quantity must be at least 1.',
         ]);
 
+        //Errors 
         if ($validator->fails()) {
             return response()->json([
                 'success' => false,
@@ -38,18 +40,19 @@ class CartController extends Controller
         $cart = AddToCart::where('product_id',$product_id)->first();
 
         if($cart){
-            //update product quantity
+            //If Product is already in Cart -> update product quantity
             $cart->quantity += $quantity;
             $cart->save();
         }
         else{
-            //add new product
+            //Otherwise Add New Product
             $cart = AddToCart::create([
                 'product_id' => $product_id,
                 'quantity' => $quantity,
             ]);
         }
 
+        //Return JSON Response
         return response()->json([
             'success' => true,
             'message' => 'Product added successfully!',
@@ -57,8 +60,10 @@ class CartController extends Controller
         ],200);
     }
 
+    //Remove Product Or Quantity of Product
     public function remove($product_id, $quantity = null){
-        $validator = validator::make([
+        $validator = validator::make(
+        [
             'product_id' => $product_id,
             'quantity' => $quantity,
         ],
@@ -68,16 +73,23 @@ class CartController extends Controller
         ],
         [
             'product_id.required' => 'Product ID is required.',
-                'product_id.integer'  => 'Product ID must be integer only.',
-                'product_id.exists'   => 'Product not found in database.',
+            'product_id.integer' => 'Product ID must be integer only.',
+            'product_id.exists' => 'Product not found in database.',
 
-                'quantity.required'   => 'Quantity is required.',
-                'quantity.integer'    => 'Quantity must be integer only.',
-                'quantity.min'        => 'Quantity must be at least 1.',
+            'quantity.integer' => 'Quantity must be integer only.',
+            'quantity.min' => 'Quantity must be at least 1.',
         ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'errors' => $validator->errors()
+            ], 422);
+        }
 
         $cart = AddToCart::where('product_id',$product_id)->first();
 
+        //Product not found in cart.
         if(!$cart){
             return response()->json([
                 'success' => false,
@@ -85,7 +97,9 @@ class CartController extends Controller
                 'data'  => $cart
             ],404);
         }
-        if($quantity === null || $quantity >= $cart->quantity){
+
+        //Product remove from cart.
+        if($quantity === null){
             $cart->delete();
             return response()->json([
                 'success' => true,
@@ -93,6 +107,23 @@ class CartController extends Controller
             ]);
         }
 
+        if ($quantity > $cart->quantity) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Remove quantity exceeds cart quantity.'
+            ], 400);
+        }
+
+        $newQty = $cart->quantity - $quantity;
+        if($newQty == 0){
+            $cart->delete();
+            return response()->json([
+                'success' => true,
+                'message' => 'Product remove from cart.',
+            ]);
+        }
+
+        //quantity decreased 
         $cart->quantity -= $quantity;
         $cart->save();
 
@@ -110,6 +141,7 @@ class CartController extends Controller
 
         $totalAmount = 0;
 
+        //Calculate the totalAmount = qty * price
         foreach ($cartItems as $item) {
             if ($item->product) {
                 $totalAmount += $item->quantity * $item->product->price;
